@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Form, redirect } from "react-router-dom";
+import { createOrder } from "../../services/apiRestaurant";
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) => /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/.test(str);
@@ -35,7 +37,10 @@ function CreateOrder() {
     <div>
       <h2>Ready to order? Let's go!</h2>
 
-      <form>
+      {/* The same things */}
+      {/* Action will be declared right here in this component */}
+      {/*<Form method="POST" action="/order/new">*/}
+      <Form method="POST">
         <div>
           <label>First Name</label>
           <input type="text" name="customer" required />
@@ -65,13 +70,33 @@ function CreateOrder() {
           />
           <label htmlFor="priority">Want to yo give your order priority?</label>
         </div>
-
+        {/* Hidden input to provide cart data into the action function */}
+        <input type="hidden" name="cart" value={JSON.stringify(cart)} />
         <div>
           <button>Order now</button>
         </div>
-      </form>
+      </Form>
     </div>
   );
+}
+
+export async function action({ request }) {
+  const fornData = await request.formData();
+  const data = Object.fromEntries(fornData);
+
+  const order ={
+    ...data,
+    cart: JSON.parse(data.cart),
+    priority: data.priority === "on",
+  };
+
+  const newOrder = await createOrder(order);
+
+  //Lets redirect to the order page with the new order id
+  //We can not use the navigate function here, because navigate() function is the hook and we are not in a component
+  //We are in the action function, and navigate() is not available here
+  //So we need to return the path
+  return redirect(`/order/${newOrder.id}`);
 }
 
 export default CreateOrder;
