@@ -3,7 +3,7 @@ import { Outlet, useNavigation } from 'react-router-dom';
 import Header from './Header';
 import CartOverview from '../features/cart/CartOverview';
 
-import Spinner from './Spinner';
+import Loader from './Loader';
 
 function AppLayout() {
     const navigation = useNavigation();
@@ -11,7 +11,7 @@ function AppLayout() {
 
     return (
         <div className='grid grid-rows-[auto_1fr_auto] h-screen'>
-            {isLoading && <Spinner />}
+            {isLoading && <Loader />}
 
             {/* These components will be also rendered */}
            <Header />
