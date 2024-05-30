@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import { createOrder } from "../../services/apiRestaurant";
 import Button from "../../ui/Button";
@@ -33,6 +34,7 @@ const fakeCart = [
 function CreateOrder() {
   // const [withPriority, setWithPriority] = useState(false);
   const navigation = useNavigation();
+  const userName = useSelector((state) => state.user.userName);
 
   // Get the submittin state from navigation - when the form is submitting, the navigation state will be "submitting"
   const isSubmitting = navigation.state === "submitting";
@@ -58,6 +60,7 @@ function CreateOrder() {
             type="text"
             name="customer"
             className="input grow"
+            defaultValue={userName}
             required
           />
         </div>
