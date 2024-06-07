@@ -3,48 +3,34 @@ import { useSelector } from "react-redux";
 import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import { createOrder } from "../../services/apiRestaurant";
 import Button from "../../ui/Button";
+import { getCart, clearCart, getTotalCartPrice } from "../cart/cartSlice";
+import store from "../../store";
+import EmptyCart from "../cart/EmptyCart";
+import { formatCurrency } from "../../utils/helpers";
 
 // https://uibakery.io/regex-library/phone-number
 const isValidPhone = (str) => /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/.test(str);
 
-const fakeCart = [
-  {
-    pizzaId: 12,
-    name: "Mediterranean",
-    quantity: 2,
-    unitPrice: 16,
-    totalPrice: 32,
-  },
-  {
-    pizzaId: 6,
-    name: "Vegetale",
-    quantity: 1,
-    unitPrice: 13,
-    totalPrice: 13,
-  },
-  {
-    pizzaId: 11,
-    name: "Spinach and Mushroom",
-    quantity: 1,
-    unitPrice: 15,
-    totalPrice: 15,
-  },
-];
-
 function CreateOrder() {
-  // const [withPriority, setWithPriority] = useState(false);
+  const [withPriority, setWithPriority] = useState(false);
   const navigation = useNavigation();
   const userName = useSelector((state) => state.user.userName);
 
   // Get the submittin state from navigation - when the form is submitting, the navigation state will be "submitting"
   const isSubmitting = navigation.state === "submitting";
-  const cart = fakeCart;
+
+  const cart = useSelector(getCart);
+    const totalCartPrice = useSelector(getTotalCartPrice);
+  const priorityPrice = withPriority ? totalCartPrice * 0.2 : 0; // 20% of the total cart price
+  const totalOrderPrice = totalCartPrice + priorityPrice;
 
   //Check for errors
   //This component is connected with the router and the action function
   //If we return an object with errors from the router action function, we can get them here
 
   const formErrors = useActionData();
+
+  if (cart.length === 0) return <EmptyCart />;
 
   return (
     <div className="px-4 py-6">
@@ -100,8 +86,8 @@ function CreateOrder() {
             id="priority"
             className="w-6 h-6 accent-yellow-400
             focus:outline-none focus:ring focus:ring-yellow-400 focus:ring-offset-2"
-            // value={withPriority}
-            // onChange={(e) => setWithPriority(e.target.checked)}
+            value={withPriority}
+            onChange={(e) => setWithPriority(e.target.checked)}
           />
           <label htmlFor="priority" className="font-medium">Want to yo give your order priority?</label>
         </div>
@@ -109,7 +95,7 @@ function CreateOrder() {
         <input type="hidden" name="cart" value={JSON.stringify(cart)} />
         <div>
           <Button size="primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Placing order...' : 'Order now!'}
+            {isSubmitting ? 'Placing order...' : `Order now for ${formatCurrency(totalOrderPrice)}!`}
           </Button>
         </div>
       </Form>
@@ -124,7 +110,7 @@ export async function action({ request }) {
   const order ={
     ...data,
     cart: JSON.parse(data.cart),
-    priority: data.priority === "on",
+    priority: data.priority === "true",
   };
 
   //Validation
@@ -137,6 +123,15 @@ export async function action({ request }) {
 
   // If everything is ok, we can create the order and redirect to the order page
   const newOrder = await createOrder(order);
+
+  //Clear the cart
+  //We want to clear the cart after the order is created, but now we are not in the component. but in the action function
+  //So we can not use the dispatch function here by using the useDispatch hook
+  //We can use the store object to dispatch the action
+  //IT IS A BAD PRACTICE TO USE THE STORE OBJECT DIRECTLY IN THE COMPONENTS
+  //But it is ok to use it in the action functions
+  //Do NOT overuse it
+  store.dispatch(clearCart());
 
   //Lets redirect to the order page with the new order id
   //We can not use the navigate function here, because navigate() function is the hook and we are not in a component
