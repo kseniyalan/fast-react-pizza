@@ -1,12 +1,13 @@
-import { createSlice } from '@reduxjs/toolkit';
-/*
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { getAddress} from '../../services/apiGeocoding';
+
 function getPosition() {
   return new Promise(function (resolve, reject) {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 }
 
-async function fetchAddress() {
+export const fetchAddressAction = createAsyncThunk('user/fetchAddress', async () => {
   // 1) We get the user's geolocation position
   const positionObj = await getPosition();
   const position = {
@@ -19,12 +20,16 @@ async function fetchAddress() {
   const address = `${addressObj?.locality}, ${addressObj?.city} ${addressObj?.postcode}, ${addressObj?.countryName}`;
 
   // 3) Then we return an object with the data that we are interested in
+  // This object will be the action.payload in the fetchAddressAction.fulfilled state
   return { position, address };
-}
-*/
+});
 
 const initialState = {
   userName: '',
+  status: 'idle',
+  position: {},
+  address: '',
+  error: '',
 };
 
 const userSlice = createSlice({
@@ -34,6 +39,21 @@ const userSlice = createSlice({
     updateName: (state, action) => {
       state.userName = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchAddressAction.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchAddressAction.fulfilled, (state, action) => {
+        state.status = 'idle';
+        state.position = action.payload.position;
+        state.address = action.payload.address;
+      })
+      .addCase(fetchAddressAction.rejected, (state, action) => {
+        state.status = 'error';
+        state.error = action.error.message;
+      })
   },
 });
 

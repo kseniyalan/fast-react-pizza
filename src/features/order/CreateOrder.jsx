@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Form, redirect, useActionData, useNavigation } from "react-router-dom";
 import { createOrder } from "../../services/apiRestaurant";
 import Button from "../../ui/Button";
 import { getCart, clearCart, getTotalCartPrice } from "../cart/cartSlice";
+import { fetchAddressAction } from "../user/userSlice";
 import store from "../../store";
 import EmptyCart from "../cart/EmptyCart";
 import { formatCurrency } from "../../utils/helpers";
@@ -14,6 +15,7 @@ const isValidPhone = (str) => /^\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-
 function CreateOrder() {
   const [withPriority, setWithPriority] = useState(false);
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const userName = useSelector((state) => state.user.userName);
 
   // Get the submittin state from navigation - when the form is submitting, the navigation state will be "submitting"
@@ -35,7 +37,7 @@ function CreateOrder() {
   return (
     <div className="px-4 py-6">
       <h2 className="text-xl font-semibold mb-8">Ready to order? Let's go!</h2>
-
+      <button onClick={() => dispatch(fetchAddressAction())}>Get position</button>
       {/* The same things */}
       {/* Action will be declared right here in this component */}
       {/*<Form method="POST" action="/order/new">*/}
