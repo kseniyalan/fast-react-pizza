@@ -1,5 +1,5 @@
 // Test ID: IIDSAT
-import { useLoaderData } from "react-router-dom";
+import { useFetcher, useLoaderData } from "react-router-dom";
 import {
   calcMinutesLeft,
   formatCurrency,
@@ -8,10 +8,20 @@ import {
 
 import { getOrder} from "../../services/apiRestaurant";
 import OrderItem from "./OrderItem";
+import { useEffect } from "react";
 
 function Order() {
   // Everyone can search for all orders, so for privacy reasons we're gonna gonna exclude names or address, these are only for the restaurant staff
   const order = useLoaderData();
+
+  const fetcher = useFetcher();
+  // Here we are going to load menu data to shom more info about pizzas which are in the order
+  //We want to load that data on the page first load
+
+  useEffect(() => {
+    if (!fetcher.data && fetcher.state === 'idle') fetcher.load("/menu");
+  }, [fetcher]);
+
   const {
     id,
     status,
@@ -47,7 +57,14 @@ function Order() {
 
       {/* Pizzas list */}
       <ul className="divide-y divide-stone-200 border-t border-b">
-        {cart.map((item) => <OrderItem key={item.id} item={item} />)}
+        {cart.map((item) => 
+          <OrderItem
+            key={item.id}
+            item={item}
+            ingredients={fetcher?.data?.find(pizza => pizza.id === item.id)?.ingredients ?? []}
+            isLoadingIngredients={fetcher?.state === 'loading'}
+          />
+        )}
       </ul>
 
       {/* Order summary */}
