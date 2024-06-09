@@ -61,9 +61,9 @@ function Order() {
       <ul className="divide-y divide-stone-200 border-t border-b">
         {cart.map((item) => 
           <OrderItem
-            key={item.id}
+            key={item.pizzaId}
             item={item}
-            ingredients={fetcher?.data?.find(pizza => pizza.id === item.id)?.ingredients ?? []}
+            ingredients={fetcher?.data?.find(pizza => pizza.id === item.pizzaId)?.ingredients ?? []}
             isLoadingIngredients={fetcher?.state === 'loading'}
           />
         )}
